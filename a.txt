@@ -1,0 +1,60 @@
+advanced-neural-sim/
+├── src/
+│   ├── core/
+│   │   ├── network.c
+│   │   ├── network.h
+│   │   ├── neuron.c
+│   │   ├── neuron.h
+│   │   ├── dendrite.c
+│   │   ├── dendrite.h
+│   │   ├── synapse.c
+│   │   └── synapse.h
+│   ├── mechanisms/
+│   │   ├── plasticity.c
+│   │   ├── plasticity.h
+│   │   ├── neuromodulation.c
+│   │   ├── neuromodulation.h
+│   │   ├── homeostasis.c
+│   │   └── homeostasis.h
+│   ├── utils/
+│   │   ├── config.c
+│   │   ├── config.h
+│   │   ├── random.c
+│   │   ├── random.h
+│   │   ├── logger.c
+│   │   └── logger.h
+│   └── main.c
+├── include/
+│   └── neural_sim.h
+├── tests/
+│   ├── test_network.c
+│   ├── test_plasticity.c
+│   ├── test_dendrite.c
+│   └── test_utils.c
+├── examples/
+│   ├── basic_simulation.c
+│   ├── plasticity_demo.c
+│   └── burst_analysis.c
+├── config/
+│   ├── default_config.ini
+│   ├── burst_analysis.ini
+│   └── plasticity_study.ini
+├── scripts/
+│   ├── analysis/
+│   │   ├── plot_activity.py
+│   │   ├── analyze_bursts.py
+│   │   └── weight_distribution.py
+│   └── setup/
+│       ├── install_dependencies.sh
+│       └── configure_environment.sh
+├── docs/
+│   ├── API.md
+│   ├── CONTRIBUTING.md
+│   ├── INSTALLATION.md
+│   └── examples/
+│       ├── basic_usage.md
+│       └── advanced_features.md
+├── CMakeLists.txt
+├── Makefile
+├── README.md
+└── LICENSE
