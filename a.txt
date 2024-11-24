@@ -1,4 +1,4 @@
-advanced-neural-sim/
+neural-network-sim/
 ├── src/
 │   ├── core/
 │   │   ├── network.c
