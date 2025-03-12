@@ -6,25 +6,38 @@ build/
 *.dll
 *.so
 
-# Python
+# Python virtual environment
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-venv/
-.env
+.Python
+*.egg-info/
+dist/
+build/
 
 # IDE files
 .vscode/
 .idea/
 *.swp
+*.swo
+*~
 
 # Output files
 output/
 temp_config.ini
-
-# Logs
 *.log
+results/
+data/
 
 # System files
 .DS_Store
 Thumbs.db
+.directory
+.Trash-*
