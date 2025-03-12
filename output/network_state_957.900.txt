@@ -1,0 +1,3 @@
+Time: 957.900
+Population frequency (pyramidal): 1.062 Hz
+Population frequency (inhibitory): 0.009 Hz

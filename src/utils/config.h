@@ -25,5 +25,6 @@ SimulationConfig* load_config(const char* filename);
 void save_config(SimulationConfig* config, const char* filename);
 void print_config(SimulationConfig* config);
 void validate_config(SimulationConfig* config);
+void destroy_config(SimulationConfig* config);
 
 #endif

@@ -1,0 +1,3 @@
+Time: 602.600
+Population frequency (pyramidal): 0.185 Hz
+Population frequency (inhibitory): 0.028 Hz

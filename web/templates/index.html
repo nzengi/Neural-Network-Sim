@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neural Network Simulation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Neural Network Simulation</h1>
+        <p class="description">
+            This simulation demonstrates the interaction between pyramidal (excitatory) and 
+            inhibitory neurons in a neural network. The network exhibits complex dynamics 
+            including homeostatic plasticity and neuromodulation.
+        </p>
+        
+        <div class="config-panel">
+            <h2>Configuration</h2>
+            <form id="simulation-form">
+                <div class="form-group">
+                    <label>Number of Pyramidal Neurons:</label>
+                    <input type="number" id="num-pyramidal" value="100">
+                </div>
+                <div class="form-group">
+                    <label>Number of Inhibitory Neurons:</label>
+                    <input type="number" id="num-inhibitory" value="20">
+                </div>
+                <div class="form-group">
+                    <label>Connection Rate:</label>
+                    <input type="number" id="connection-rate" value="0.1" step="0.1">
+                </div>
+                <div class="form-group">
+                    <label>Simulation Time (ms):</label>
+                    <input type="number" id="sim-time" value="1000">
+                </div>
+                <button type="submit">Start Simulation</button>
+            </form>
+        </div>
+
+        <div class="info-panel">
+            <h3>Simulation Parameters</h3>
+            <ul>
+                <li>Time step (dt): 0.001 ms</li>
+                <li>Output interval: 0.1 ms</li>
+                <li>Neuron model: Adaptive exponential integrate-and-fire</li>
+                <li>Plasticity: Homeostatic and synaptic</li>
+            </ul>
+        </div>
+
+        <div class="progress-bar" id="progress-container" style="display: none;">
+            <div id="progress"></div>
+            <span id="progress-text">0%</span>
+        </div>
+
+        <div class="results-panel">
+            <h2>Results</h2>
+            <div id="activity-plot"></div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html> 

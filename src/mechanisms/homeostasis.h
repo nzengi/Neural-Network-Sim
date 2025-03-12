@@ -1,21 +1,16 @@
 #ifndef NEURAL_HOMEOSTASIS_H
 #define NEURAL_HOMEOSTASIS_H
 
-#include "../core/neuron.h"
+#include "core/neuron.h"
 
 typedef struct {
-    double target_rate;
-    double adaptation_rate;
-    double calcium_target;
-    double conductance_scaling;
-    double metabolic_cost;
-    double energy_baseline;
-    double recovery_rate;
+    double target_rate;        // Hedef ateşleme hızı
+    double adaptation_rate;    // Adaptasyon hızı
+    double energy_baseline;    // Enerji bazal seviyesi
+    double recovery_rate;      // İyileşme hızı
 } HomeostasisParams;
 
-void update_homeostasis(Neuron* neuron, HomeostasisParams* params);
-void scale_synaptic_strengths(Neuron* neuron, HomeostasisParams* params);
-void regulate_intrinsic_excitability(Neuron* neuron, HomeostasisParams* params);
-void manage_energy_resources(Neuron* neuron, HomeostasisParams* params);
+void update_homeostasis(Neuron* neuron, HomeostasisParams* params, double dt);
+void regulate_energy(Neuron* neuron, HomeostasisParams* params, double dt);
 
 #endif

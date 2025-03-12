@@ -1,7 +1,12 @@
 #ifndef NEURAL_NEURON_H
 #define NEURAL_NEURON_H
 
-#include "dendrite.h"
+#include <stdbool.h>
+#include <stdio.h>
+
+// Forward declaration
+struct Dendrite;  // dendrite.h'ı include etmek yerine forward declaration
+                  // kullanıyoruz
 
 #define MAX_DENDRITES 20
 
@@ -23,20 +28,19 @@ typedef struct {
 } Neuromodulators;
 
 typedef struct {
-    NeuronParams params;
-    double membrane_potential;
-    double last_spike_time;
-    Dendrite* dendrites;
-    int num_dendrites;
-    Neuromodulators modulators;
-    bool is_inhibitory;
-    double adaptation_current;
-    double calcium_concentration;
+    double membrane_potential;     // Membran potansiyeli
+    double calcium_concentration;  // Kalsiyum konsantrasyonu
+    double adaptation_current;     // Adaptasyon akımı
+    double refractory_time;        // Refractory period
+    double last_spike_time;        // Son spike zamanı
+    bool is_inhibitory;            // İnhibitör nöron mu?
 } Neuron;
 
+// Function declarations
 Neuron* create_neuron(NeuronParams params, bool is_inhibitory);
 void destroy_neuron(Neuron* neuron);
 void update_neuron(Neuron* neuron, double dt);
 bool check_spike(Neuron* neuron);
+void init_neuron(Neuron* neuron, bool is_inhibitory);
 
 #endif

@@ -1,34 +1,50 @@
-#include <stdarg.h>
-#include <time.h>
-#include <sys/stat.h>
-#include "logger.h"
+#include "utils/logger.h"
 
-Logger* create_logger(const char* log_dir, LogLevel min_level) {
+#include <errno.h>   // errno ve EEXIST için
+#include <stdarg.h>  // va_list için
+#include <stdio.h>
+#include <stdlib.h>  // malloc, free için
+#include <string.h>  // strdup için
+#include <sys/stat.h>
+#include <time.h>
+
+Logger* create_logger(const char* log_dir, LogLevel level) {
     Logger* logger = malloc(sizeof(Logger));
-    if (!logger) return NULL;
+    if (!logger) {
+        fprintf(stderr, "Failed to allocate memory for logger\n");
+        return NULL;
+    }
 
     // Create log directory if it doesn't exist
-    mkdir(log_dir, 0755);
-
-    // Create log filename with timestamp
-    time_t now = time(NULL);
-    struct tm* t = localtime(&now);
-    char filename[256];
-    snprintf(filename, sizeof(filename), "%s/sim_%04d%02d%02d_%02d%02d%02d.log",
-             log_dir, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-             t->tm_hour, t->tm_min, t->tm_sec);
-
-    logger->log_file = fopen(filename, "w");
-    if (!logger->log_file) {
+    char log_path[256];
+    snprintf(log_path, sizeof(log_path), "%s/logs", log_dir);
+    if (mkdir(log_path, 0755) != 0 && errno != EEXIST) {
+        fprintf(stderr, "Failed to create log directory: %s\n", log_path);
         free(logger);
         return NULL;
     }
 
-    // Initialize logger properties
-    logger->min_level = min_level;
-    logger->console_output = true;
+    // Initialize logger
+    logger->level = level;
     logger->log_directory = strdup(log_dir);
-    logger->buffer_size = 4096;
+    if (!logger->log_directory) {
+        fprintf(stderr, "Failed to allocate memory for log directory path\n");
+        free(logger);
+        return NULL;
+    }
+
+    // Open main log file
+    char log_file[256];
+    snprintf(log_file, sizeof(log_file), "%s/simulation.log", log_dir);
+    logger->log_file = fopen(log_file, "a");
+    if (!logger->log_file) {
+        fprintf(stderr, "Failed to open log file: %s\n", log_file);
+        free(logger->log_directory);
+        free(logger);
+        return NULL;
+    }
+
+    logger->data_file = NULL;
     logger->last_save_time = 0.0;
 
     return logger;
@@ -44,41 +60,37 @@ void destroy_logger(Logger* logger) {
 }
 
 void log_message(Logger* logger, LogLevel level, const char* format, ...) {
-    if (level < logger->min_level) return;
+    if (level < logger->level) return;
 
-    time_t now = time(NULL);
-    struct tm* t = localtime(&now);
-    
-    // Get level string
-    const char* level_str;
+    time_t now;
+    time(&now);
+    char timestamp[26];
+    ctime_r(&now, timestamp);
+    timestamp[24] = '\0';  // Remove newline
+
+    fprintf(logger->log_file, "[%s] ", timestamp);
     switch (level) {
-        case LOG_DEBUG:   level_str = "DEBUG"; break;
-        case LOG_INFO:    level_str = "INFO"; break;
-        case LOG_WARNING: level_str = "WARNING"; break;
-        case LOG_ERROR:   level_str = "ERROR"; break;
-        default:          level_str = "UNKNOWN";
+        case LOG_DEBUG:
+            fprintf(logger->log_file, "[DEBUG] ");
+            break;
+        case LOG_INFO:
+            fprintf(logger->log_file, "[INFO] ");
+            break;
+        case LOG_WARNING:
+            fprintf(logger->log_file, "[WARNING] ");
+            break;
+        case LOG_ERROR:
+            fprintf(logger->log_file, "[ERROR] ");
+            break;
     }
 
-    // Format timestamp and level
-    char timestamp[20];
-    snprintf(timestamp, sizeof(timestamp), "%04d-%02d-%02d %02d:%02d:%02d",
-             t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-             t->tm_hour, t->tm_min, t->tm_sec);
-
-    // Format message
     va_list args;
     va_start(args, format);
-    char message[1024];
-    vsnprintf(message, sizeof(message), format, args);
+    vfprintf(logger->log_file, format, args);
     va_end(args);
+    fprintf(logger->log_file, "\n");
 
-    // Write to log file
-    fprintf(logger->log_file, "[%s] %s: %s\n", timestamp, level_str, message);
-    if (logger->console_output) {
-        fprintf(stdout, "[%s] %s: %s\n", timestamp, level_str, message);
-    }
-    
-    // Flush if error
+    // Flush immediately for errors
     if (level == LOG_ERROR) {
         fflush(logger->log_file);
     }
@@ -88,17 +100,18 @@ void log_network_state(Logger* logger, Network* network, double time) {
     // Create data filename if needed
     if (!logger->data_file) {
         char filename[256];
-        snprintf(filename, sizeof(filename), "%s/network_state.dat", logger->log_directory);
+        snprintf(filename, sizeof(filename), "%s/network_state.dat",
+                 logger->log_directory);
         logger->data_file = fopen(filename, "w");
         if (!logger->data_file) return;
-        
+
         // Write header
         fprintf(logger->data_file, "Time\tPopFreqP\tPopFreqI\n");
     }
 
     // Log network state
-    fprintf(logger->data_file, "%.6f\t%.6f\t%.6f\n",
-            time, network->population_freq_p, network->population_freq_i);
+    fprintf(logger->data_file, "%.6f\t%.6f\t%.6f\n", time,
+            network->population_freq_p, network->population_freq_i);
 
     // Periodic flush
     if (time - logger->last_save_time >= 1.0) {
@@ -114,7 +127,8 @@ void log_neuron_state(Logger* logger, Neuron* neuron, int id, double time) {
     // Create file if needed
     if (!neuron_file) {
         char filename[256];
-        snprintf(filename, sizeof(filename), "%s/neuron_states.dat", logger->log_directory);
+        snprintf(filename, sizeof(filename), "%s/neuron_states.dat",
+                 logger->log_directory);
         neuron_file = fopen(filename, "w");
         if (!neuron_file) return;
     }
@@ -126,9 +140,9 @@ void log_neuron_state(Logger* logger, Neuron* neuron, int id, double time) {
     }
 
     // Log neuron state
-    fprintf(neuron_file, "%.6f\t%d\t%.6f\t%.6f\t%.6f\n",
-            time, id, neuron->membrane_potential,
-            neuron->calcium_concentration, neuron->adaptation_current);
+    fprintf(neuron_file, "%.6f\t%d\t%.6f\t%.6f\t%.6f\n", time, id,
+            neuron->membrane_potential, neuron->calcium_concentration,
+            neuron->adaptation_current);
 }
 
 void flush_logs(Logger* logger) {

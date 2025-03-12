@@ -1,0 +1,3 @@
+Time: 402.100
+Population frequency (pyramidal): 1.200 Hz
+Population frequency (inhibitory): 0.001 Hz

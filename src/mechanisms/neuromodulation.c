@@ -1,47 +1,62 @@
+#include "mechanisms/neuromodulation.h"
+
 #include <math.h>
-#include "neuromodulation.h"
 
-void update_neuromodulators(Neuron* neuron, NeuromodulationParams* params) {
-    // Decay towards baseline
-    neuron->modulators.dopamine = neuron->modulators.dopamine * (1.0 - params->decay_rate) +
-                                 params->baseline_dopamine * params->decay_rate;
-    
-    neuron->modulators.serotonin = neuron->modulators.serotonin * (1.0 - params->decay_rate) +
-                                  params->baseline_serotonin * params->decay_rate;
-    
-    neuron->modulators.noradrenaline = neuron->modulators.noradrenaline * (1.0 - params->decay_rate) +
-                                      params->baseline_noradrenaline * params->decay_rate;
-    
-    neuron->modulators.acetylcholine = neuron->modulators.acetylcholine * (1.0 - params->decay_rate) +
-                                      params->baseline_acetylcholine * params->decay_rate;
+void update_neuromodulators(Neuron* neuron, NeuromodulationParams* params,
+                            double dt) {
+    // Nöronun spike atıp atmadığını kontrol et
+    bool has_spiked = neuron->last_spike_time < dt;
+
+    // Dopamin güncellemesi
+    if (has_spiked) {
+        params->dopamine += 0.1;
+    }
+    params->dopamine =
+        params->baseline_da + (params->dopamine - params->baseline_da) *
+                                  exp(-dt / 1000.0);  // τ_DA = 1000ms
+
+    // Serotonin güncellemesi
+    if (has_spiked && neuron->is_inhibitory) {
+        params->serotonin += 0.05;
+    }
+    params->serotonin =
+        params->baseline_5ht + (params->serotonin - params->baseline_5ht) *
+                                   exp(-dt / 2000.0);  // τ_5HT = 2000ms
+
+    // Noradrenalin güncellemesi
+    if (has_spiked) {
+        params->noradrenaline += 0.2;
+    }
+    params->noradrenaline =
+        params->baseline_na + (params->noradrenaline - params->baseline_na) *
+                                  exp(-dt / 500.0);  // τ_NA = 500ms
+
+    // Asetilkolin güncellemesi
+    if (has_spiked && !neuron->is_inhibitory) {
+        params->acetylcholine += 0.15;
+    }
+    params->acetylcholine =
+        params->baseline_ach + (params->acetylcholine - params->baseline_ach) *
+                                   exp(-dt / 1500.0);  // τ_ACh = 1500ms
+
+    // Nöromodülatörlerin nöron üzerindeki etkisi
+    neuron->adaptation_current *= (1.0 - 0.1 * params->dopamine);
+    if (neuron->adaptation_current < 0) neuron->adaptation_current = 0;
 }
 
-void process_reward(Neuron* neuron, double reward, NeuromodulationParams* params) {
-    // Update dopamine based on reward
-    double reward_prediction_error = reward - neuron->modulators.dopamine;
-    neuron->modulators.dopamine += params->reward_strength * reward_prediction_error;
-    
-    // Secondary effects on other modulators
-    neuron->modulators.serotonin += 0.1 * reward_prediction_error;
-    neuron->modulators.noradrenaline += 0.2 * fabs(reward_prediction_error);
-}
+void process_reward(Neuron* neuron, NeuromodulationParams* params,
+                    double reward) {
+    double reward_prediction_error = reward - params->dopamine;
 
-void modulate_plasticity(Synapse* synapse, Neuromodulators* modulators) {
-    // Calculate modulation factor
-    double modulation = (modulators->dopamine / modulators->acetylcholine) *
-                       sqrt(modulators->noradrenaline);
-    
-    // Apply modulation to synaptic parameters
-    synapse->meta_plasticity *= modulation;
-    synapse->trace *= (1.0 + 0.1 * (modulation - 1.0));
-}
+    // Nöromodülatör seviyelerini güncelle
+    params->dopamine += 0.1 * reward_prediction_error;
+    params->serotonin += 0.1 * reward_prediction_error;
+    params->noradrenaline += 0.2 * fabs(reward_prediction_error);
 
-void update_attention(Neuron* neuron, NeuromodulationParams* params) {
-    // Modulate attention through noradrenaline and acetylcholine
-    double attention_level = neuron->modulators.noradrenaline * 
-                           neuron->modulators.acetylcholine;
-    
-    // Adjust neuronal parameters based on attention
-    neuron->params.v_threshold *= (1.0 - params->attention_modulation * (attention_level - 1.0));
-    neuron->params.g_leak *= (1.0 + params->attention_modulation * (attention_level - 1.0));
+    // Nöron adaptasyonunu güncelle
+    if (reward_prediction_error > 0) {
+        neuron->adaptation_current *= 0.9;  // Pozitif pekiştirme
+    } else {
+        neuron->adaptation_current *= 1.1;  // Negatif pekiştirme
+    }
 }

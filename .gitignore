@@ -1,3 +1,30 @@
+# Build files
 build/
 *.o
 *.out
+*.exe
+*.dll
+*.so
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+
+# Output files
+output/
+temp_config.ini
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db

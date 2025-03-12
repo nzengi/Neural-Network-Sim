@@ -2,8 +2,9 @@
 #define NEURAL_NETWORK_H
 
 #include <stdbool.h>
-#include "neuron.h"
+
 #include "dendrite.h"
+#include "neuron.h"
 #include "synapse.h"
 
 #define MAX_NEURONS 505
@@ -31,6 +32,9 @@ typedef struct {
 Network* create_network(NetworkConfig config);
 void destroy_network(Network* net);
 void update_network(Network* net, double time);
+void save_network_state(Network* net, double time);
+
+// Network state management
 void save_network_state(Network* net, double time);
 
 #endif
